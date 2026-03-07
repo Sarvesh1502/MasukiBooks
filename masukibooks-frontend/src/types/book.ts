@@ -15,12 +15,18 @@ export interface Book {
   ratingCount: number;
   isActive: boolean;
   createdAt: string;
+  format?: string;
+  compareAtPrice?: number;
+  sku?: string;
+  categoryId?: string;
+  imageUrls?: string[];
 }
 
 export interface BookInput {
   title: string;
   author: string;
   category: string;
+  categoryId?: string;
   price: number;
   description: string;
   coverUrl: string;
@@ -29,6 +35,8 @@ export interface BookInput {
   isbn?: string;
   publisher?: string;
   stock?: number;
+  format?: string;
+  sku?: string;
 }
 
 export interface CartItem {
@@ -36,13 +44,17 @@ export interface CartItem {
   bookId: string;
   quantity: number;
   book?: Book;
+  unitPrice?: number;
+  lineTotal?: number;
 }
 
 export interface Order {
   id: string;
+  orderNumber?: string;
   userId: string;
   status: string;
   total: number;
+  subtotal?: number;
   currency: string;
   shippingName: string;
   shippingAddress: string;
@@ -54,6 +66,8 @@ export interface Order {
   paymentStatus: string;
   promoCode: string | null;
   discount: number;
+  taxAmount?: number;
+  shippingAmount?: number;
   notes: string | null;
   createdAt: string;
   items?: OrderItem[];
@@ -67,6 +81,7 @@ export interface OrderItem {
   author: string;
   price: number;
   quantity: number;
+  totalPrice?: number;
 }
 
 export interface Review {
@@ -75,16 +90,35 @@ export interface Review {
   bookId: string;
   rating: number;
   comment: string;
+  title?: string;
   isApproved: boolean;
   createdAt: string;
   userName?: string;
+  status?: string;
 }
 
 export interface ShippingInfo {
   name: string;
   address: string;
+  addressLine2?: string;
   city: string;
+  state?: string;
   zip: string;
   country: string;
   phone: string;
+  email?: string;
+}
+
+export interface Address {
+  addressId: string;
+  fullName: string;
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  state?: string;
+  zipCode: string;
+  country: string;
+  phoneNumber: string;
+  email?: string;
+  isDefault: boolean;
 }

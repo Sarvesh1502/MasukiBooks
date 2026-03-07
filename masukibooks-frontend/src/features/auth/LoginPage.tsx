@@ -5,7 +5,6 @@ import { useNavigate, Link } from "react-router-dom";
 import background from "../../assets/login-pattern.jpeg";
 import type { AppDispatch } from "../../app/store";
 import { signIn } from "../../services/authService";
-import type { AppUser } from "../../types/auth";
 
 const DEMO_ACCOUNTS = [
   { label: "Demo User", email: "user@masukibooks.com", password: "password123", role: "user" as const },
@@ -46,15 +45,7 @@ export default function LoginPage() {
       dispatch(setUser(user));
       navigate(user.role === "admin" ? "/admin" : "/dashboard");
     } catch {
-      // If Supabase auth fails, create a local dummy session
-      const dummyUser: AppUser = {
-        id: `demo-${demo.role}-${Date.now()}`,
-        email: demo.email,
-        fullName: demo.label,
-        role: demo.role,
-      };
-      dispatch(setUser(dummyUser));
-      navigate(demo.role === "admin" ? "/admin" : "/dashboard");
+      setError("Demo account not available. Please register a new account.");
     } finally {
       setIsSubmitting(false);
     }
@@ -134,7 +125,7 @@ export default function LoginPage() {
 
         <p style={{ textAlign: "center", fontSize: "13px", margin: 0 }}>
           <Link to="/forgot-password" style={{ color: "#6b4630" }}>Forgot password?</Link>
-        </p>}
+        </p>
         <div style={{ borderTop: "1px solid #c7aa99", paddingTop: "12px", marginTop: "4px" }}>
           <p style={{ textAlign: "center", fontSize: "12px", color: "#666", marginBottom: "8px" }}>
             Quick Demo Access

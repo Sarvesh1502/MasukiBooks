@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "../../app/store";
 import type { Book, Review } from "../../types/book";
-import { fetchBooks } from "../../services/booksService";
+import { fetchBookById } from "../../services/booksService";
 import { fetchReviewsForBook, createReview } from "../../services/reviewService";
 import { addItemToCart } from "../cart/cartSlice";
 import { addToWishlist, removeFromWishlist, isInWishlist } from "../../services/wishlistService";
@@ -29,15 +29,16 @@ export default function BookDetailPage() {
       void isInWishlist(user.id, id).then(setWishlisted);
     }
   }, [user, id]);
+
+  useEffect(() => {
     const load = async () => {
       if (!id) return;
       setLoading(true);
       try {
-        const [books, revs] = await Promise.all([
-          fetchBooks(),
+        const [found, revs] = await Promise.all([
+          fetchBookById(id),
           fetchReviewsForBook(id),
         ]);
-        const found = books.find((b) => b.id === id) ?? null;
         setBook(found);
         setReviews(revs);
       } catch {

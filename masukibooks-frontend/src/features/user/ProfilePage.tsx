@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "../../app/store";
 import { setUser } from "../auth/authSlice";
-import { supabase } from "../../services/supabase";
+import { updateProfile, changePassword } from "../../services/authService";
 
 export default function ProfilePage() {
   const dispatch = useDispatch<AppDispatch>();
@@ -14,6 +14,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
+  const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [passwordMsg, setPasswordMsg] = useState("");
 
@@ -23,13 +24,9 @@ export default function ProfilePage() {
     setMessage("");
 
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ full_name: fullName, phone })
-        .eq("id", user.id);
-
-      if (error) throw error;
-
+      const [firstName, ...rest] = fullName.trim().split(" ");
+      const lastName = rest.join(" ");
+      await updateProfile({ firstName, lastName, phoneNumber: phone });
       dispatch(setUser({ ...user, fullName, phone }));
       setMessage("Profile updated successfully!");
       setTimeout(() => setMessage(""), 3000);
@@ -45,12 +42,16 @@ export default function ProfilePage() {
       setPasswordMsg("Password must be at least 6 characters");
       return;
     }
+    if (!oldPassword) {
+      setPasswordMsg("Please enter your current password");
+      return;
+    }
     setChangingPassword(true);
     setPasswordMsg("");
     try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
+      await changePassword(oldPassword, newPassword);
       setPasswordMsg("Password updated!");
+      setOldPassword("");
       setNewPassword("");
       setTimeout(() => setPasswordMsg(""), 3000);
     } catch (err) {
@@ -177,10 +178,17 @@ export default function ProfilePage() {
         <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
           <input
             type="password"
+            placeholder="Current password"
+            value={oldPassword}
+            onChange={(e) => setOldPassword(e.target.value)}
+            style={{ ...inputStyle, flex: 1, minWidth: "160px" }}
+          />
+          <input
+            type="password"
             placeholder="New password (min 6 chars)"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            style={{ ...inputStyle, flex: 1, minWidth: "200px" }}
+            style={{ ...inputStyle, flex: 1, minWidth: "160px" }}
           />
           <button
             onClick={() => { void handleChangePassword(); }}

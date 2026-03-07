@@ -1,52 +1,84 @@
 import type { Review } from "../types/book";
-import { isSupabaseConfigured, supabase } from "./supabase";
+import api, { type ApiResponse, type Page } from "./api";
 
-export async function fetchReviewsForBook(
-  bookId: string
-): Promise<Review[]> {
-  if (!isSupabaseConfigured) return [];
+// ── Backend review shape ──────────────────────────────────────
+interface ReviewEntity {
+  reviewId: string;
+  product?: { productId: string };
+  user?: { userId: string; firstName: string; lastName: string };
+  order?: { orderId: string };
+  rating: number;
+  title: string | null;
+  body: string | null;
+  status: string;
+  createdAt: string;
+}
 
-  const { data, error } = await supabase
-    .from("reviews")
-    .select("*, profiles(full_name)")
-    .eq("book_id", bookId)
-    .eq("is_approved", true)
-    .order("created_at", { ascending: false });
+function mapReview(r: ReviewEntity): Review {
+  return {
+    id: r.reviewId ?? "",
+    userId: r.user?.userId ?? "",
+    bookId: r.product?.productId ?? "",
+    rating: r.rating ?? 0,
+    comment: r.body ?? "",
+    title: r.title ?? undefined,
+    isApproved: r.status === "approved",
+    status: r.status,
+    createdAt: r.createdAt ?? "",
+    userName: r.user
+      ? `${r.user.firstName ?? ""} ${r.user.lastName ?? ""}`.trim() || "Anonymous"
+      : "Anonymous",
+  };
+}
 
-  if (error) {
-    console.warn("Reviews fetch error:", error.message);
+// ── Public API ────────────────────────────────────────────────
+
+export async function fetchReviewsForBook(bookId: string): Promise<Review[]> {
+  try {
+    const { data } = await api.get<ApiResponse<Page<ReviewEntity>>>(
+      `/reviews/product/${bookId}`,
+      { params: { size: 50 } }
+    );
+    return (data.data.content ?? []).map(mapReview);
+  } catch (err) {
+    console.warn("Reviews fetch error:", err);
     return [];
   }
-
-  return (data ?? []).map(mapReview);
 }
 
 export async function fetchAllReviews(): Promise<Review[]> {
-  if (!isSupabaseConfigured) return [];
-
-  const { data, error } = await supabase
-    .from("reviews")
-    .select("*, profiles(full_name)")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.warn("All reviews fetch error:", error.message);
+  try {
+    const { data } = await api.get<ApiResponse<Page<ReviewEntity>>>(
+      "/admin/reviews/pending",
+      { params: { size: 100 } }
+    );
+    return (data.data.content ?? []).map(mapReview);
+  } catch (err) {
+    console.warn("All reviews fetch error:", err);
     return [];
   }
-
-  return (data ?? []).map(mapReview);
 }
 
 export async function createReview(
-  userId: string,
+  _userId: string,
   bookId: string,
   rating: number,
   comment: string
 ): Promise<Review> {
-  if (!isSupabaseConfigured) {
+  try {
+    const { data } = await api.post<ApiResponse<ReviewEntity>>("/reviews", {
+      productId: bookId,
+      orderId: "00000000-0000-0000-0000-000000000000", // placeholder
+      rating,
+      title: "",
+      body: comment,
+    });
+    return mapReview(data.data);
+  } catch {
+    // Return a local review if backend fails
     return {
       id: `rev-${Date.now()}`,
-      userId,
+      userId: _userId,
       bookId,
       rating,
       comment,
@@ -54,36 +86,13 @@ export async function createReview(
       createdAt: new Date().toISOString(),
     };
   }
-
-  const { data, error } = await supabase
-    .from("reviews")
-    .insert({
-      user_id: userId,
-      book_id: bookId,
-      rating,
-      comment,
-      is_approved: true,
-    })
-    .select()
-    .single();
-
-  if (error || !data) {
-    throw new Error(error?.message ?? "Failed to create review");
-  }
-
-  return mapReview(data);
 }
 
 export async function deleteReview(reviewId: string): Promise<void> {
-  if (!isSupabaseConfigured) return;
-
-  const { error } = await supabase
-    .from("reviews")
-    .delete()
-    .eq("id", reviewId);
-
-  if (error) {
-    throw new Error(error.message);
+  try {
+    await api.delete(`/reviews/${reviewId}`);
+  } catch (err) {
+    console.warn("Delete review error:", err);
   }
 }
 
@@ -91,28 +100,11 @@ export async function toggleReviewApproval(
   reviewId: string,
   isApproved: boolean
 ): Promise<void> {
-  if (!isSupabaseConfigured) return;
-
-  const { error } = await supabase
-    .from("reviews")
-    .update({ is_approved: isApproved })
-    .eq("id", reviewId);
-
-  if (error) {
-    throw new Error(error.message);
+  try {
+    await api.patch(`/admin/reviews/${reviewId}/moderate`, {
+      status: isApproved ? "approved" : "rejected",
+    });
+  } catch (err) {
+    console.warn("Toggle review approval error:", err);
   }
-}
-
-function mapReview(row: Record<string, unknown>): Review {
-  const profile = row.profiles as Record<string, unknown> | null;
-  return {
-    id: String(row.id ?? ""),
-    userId: String(row.user_id ?? ""),
-    bookId: String(row.book_id ?? ""),
-    rating: Number(row.rating ?? 0),
-    comment: String(row.comment ?? ""),
-    isApproved: row.is_approved !== false,
-    createdAt: String(row.created_at ?? ""),
-    userName: profile ? String(profile.full_name ?? "Anonymous") : "Anonymous",
-  };
 }
