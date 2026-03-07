@@ -1,5 +1,6 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
+import { Link } from "react-router-dom";
 import TypeText from "../../components/ui/TypeText";
 import background from "../../assets/landing-bg.jpeg";
 
@@ -9,8 +10,7 @@ const fadeUp = {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 1,
-      ease: "easeOut"
+      duration: 1
     }
   }
 };
@@ -217,7 +217,11 @@ export default function HomePage() {
         </AnimatedSection>
 
         <AnimatedSection>
-          <button
+          <Link
+            to="/signup"
+            style={{ color: "white", textDecoration: "none" }}
+          >
+            <button
             style={{
               marginTop: "20px",
               padding: "12px 24px",
@@ -227,8 +231,9 @@ export default function HomePage() {
               cursor: "pointer"
             }}
           >
-            Get Started
-          </button>
+              Get Started
+            </button>
+          </Link>
         </AnimatedSection>
       </section>
 
