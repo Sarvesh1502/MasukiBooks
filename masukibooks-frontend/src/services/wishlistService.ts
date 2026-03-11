@@ -1,5 +1,6 @@
 import type { Book } from "../types/book";
 import { isSupabaseConfigured, supabase } from "./supabase";
+import { getStoredToken } from "./api";
 
 export interface WishlistItem {
   id: string;
@@ -8,6 +9,12 @@ export interface WishlistItem {
 }
 
 let localWishlist: WishlistItem[] = [];
+
+function useLocalWishlist(userId: string): boolean {
+  // Use local wishlist when Supabase is not configured,
+  // user is a demo user, or user authenticated via the backend API
+  return !isSupabaseConfigured || userId.startsWith("demo-") || !!getStoredToken();
+}
 
 function mapBookRow(bookData: Record<string, unknown>): Book {
   return {
@@ -31,7 +38,7 @@ function mapBookRow(bookData: Record<string, unknown>): Book {
 }
 
 export async function fetchWishlist(userId: string): Promise<WishlistItem[]> {
-  if (!isSupabaseConfigured || userId.startsWith("demo-")) {
+  if (useLocalWishlist(userId)) {
     return localWishlist;
   }
   try {
@@ -57,7 +64,7 @@ export async function addToWishlist(
 ): Promise<void> {
   if (localWishlist.find((i) => i.bookId === bookId)) return;
   const item: WishlistItem = { id: `w-${Date.now()}`, bookId, book };
-  if (!isSupabaseConfigured || userId.startsWith("demo-")) {
+  if (useLocalWishlist(userId)) {
     localWishlist.push(item);
     return;
   }
@@ -76,7 +83,7 @@ export async function removeFromWishlist(
   bookId: string
 ): Promise<void> {
   localWishlist = localWishlist.filter((i) => i.bookId !== bookId);
-  if (!isSupabaseConfigured || userId.startsWith("demo-")) return;
+  if (useLocalWishlist(userId)) return;
   try {
     await supabase
       .from("wishlist")
@@ -92,7 +99,7 @@ export async function isInWishlist(
   userId: string,
   bookId: string
 ): Promise<boolean> {
-  if (!isSupabaseConfigured || userId.startsWith("demo-")) {
+  if (useLocalWishlist(userId)) {
     return localWishlist.some((i) => i.bookId === bookId);
   }
   try {

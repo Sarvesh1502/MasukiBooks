@@ -38,8 +38,8 @@ export default function ProfilePage() {
   };
 
   const handleChangePassword = async () => {
-    if (!newPassword || newPassword.length < 6) {
-      setPasswordMsg("Password must be at least 6 characters");
+    if (!newPassword || newPassword.length < 8) {
+      setPasswordMsg("Password must be at least 8 characters");
       return;
     }
     if (!oldPassword) {
@@ -185,7 +185,7 @@ export default function ProfilePage() {
           />
           <input
             type="password"
-            placeholder="New password (min 6 chars)"
+            placeholder="New password (min 8 chars)"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             style={{ ...inputStyle, flex: 1, minWidth: "160px" }}

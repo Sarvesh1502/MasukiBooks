@@ -60,7 +60,13 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (axios.isAxiosError(error)) {
-      const data = error.response?.data as { message?: string } | undefined;
+      // No response at all → backend unreachable
+      if (!error.response) {
+        return Promise.reject(
+          new Error("Unable to connect to the server. Please make sure the backend is running.")
+        );
+      }
+      const data = error.response.data as { message?: string } | undefined;
       const msg = data?.message ?? error.message;
       return Promise.reject(new Error(msg));
     }

@@ -37,7 +37,7 @@ export default function ForgotPasswordPage() {
 
   const handleResetPassword = async () => {
     setError("");
-    if (newPassword.length < 6) { setError("Password must be at least 6 characters."); return; }
+    if (newPassword.length < 8) { setError("Password must be at least 8 characters."); return; }
     if (newPassword !== confirmPassword) { setError("Passwords do not match."); return; }
     setLoading(true);
     try {
@@ -133,7 +133,7 @@ export default function ForgotPasswordPage() {
           <>
             <h2 style={{ color: "#4d3021", textAlign: "center", margin: 0 }}>New Password</h2>
             <input
-              type="password" placeholder="New password (min 6)"
+              type="password" placeholder="New password (min 8)"
               value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
               style={inputStyle}
             />

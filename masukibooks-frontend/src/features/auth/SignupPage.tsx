@@ -64,7 +64,7 @@ export default function SignupPage() {
     if (!phone.trim() || phone.replace(/\D/g, "").length < 10) {
       setError("Enter a valid phone number (e.g. +919876543210)."); return;
     }
-    if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
+    if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
 
     setIsSubmitting(true);
     const otp = generateOtp();
@@ -170,7 +170,7 @@ export default function SignupPage() {
             <input type="text"     placeholder="Full name"                    value={name}     onChange={(e) => setName(e.target.value)}     style={INPUT_STYLE} />
             <input type="email"    placeholder="Email address"               value={email}    onChange={(e) => setEmail(e.target.value)}    style={INPUT_STYLE} />
             <input type="tel"      placeholder="Phone (e.g. +919876543210)" value={phone}    onChange={(e) => setPhone(e.target.value)}    style={INPUT_STYLE} />
-            <input type="password" placeholder="Create password (min 6)"   value={password} onChange={(e) => setPassword(e.target.value)} style={INPUT_STYLE} />
+            <input type="password" placeholder="Create password (min 8)"   value={password} onChange={(e) => setPassword(e.target.value)} style={INPUT_STYLE} />
 
             <button onClick={() => { void handleSubmitForm(); }} disabled={isSubmitting} style={BTN_STYLE(isSubmitting)}>
               {isSubmitting ? "Sending OTP..." : "Continue"}
